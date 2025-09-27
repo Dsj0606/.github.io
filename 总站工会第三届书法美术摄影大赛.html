@@ -1,0 +1,1643 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>总站工会第三届书法美术摄影大赛</title>
+    <script src="https://cdn.tailwindcss.com/3.3.3"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <style>
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4edf5 100%);
+            min-height: 100vh;
+        }
+        
+        .glassmorphism {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.1);
+        }
+        
+        .card-hover {
+            transition: all 0.3s ease;
+        }
+        
+        .card-hover:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 28px 0 rgba(31, 38, 135, 0.15);
+        }
+        
+        .checkbox-custom {
+            position: absolute;
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        
+        .checkbox-custom + label {
+            position: relative;
+            cursor: pointer;
+            padding-left: 30px;
+        }
+        
+        .checkbox-custom + label:before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 20px;
+            height: 20px;
+            border: 2px solid #e2e8f0;
+            border-radius: 4px;
+            background: white;
+            transition: all 0.2s ease;
+        }
+        
+        .checkbox-custom:checked + label:before {
+            background: #4f46e5;
+            border-color: #4f46e5;
+        }
+        
+        .checkbox-custom:checked + label:after {
+            content: '';
+            position: absolute;
+            left: 7px;
+            top: 3px;
+            width: 6px;
+            height: 12px;
+            border: solid white;
+            border-width: 0 2px 2px 0;
+            transform: rotate(45deg);
+        }
+        
+        .chart-container {
+            height: 320px;
+            width: 100%;
+            position: relative;
+        }
+        
+        .admin-link {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            font-size: 12px;
+            color: #6b7280;
+            text-decoration: underline;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .image-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+
+        /* 图片模态框样式 */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .modal.show {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 1;
+        }
+
+        .modal-content {
+            max-width: 90vw;
+            max-height: 90vh;
+            object-fit: contain;
+            border-radius: 8px;
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 20px;
+            right: 30px;
+            color: white;
+            font-size: 35px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .close-btn:hover {
+            color: #ff0000;
+        }
+
+        .image-container {
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .image-container:hover {
+            transform: scale(1.02);
+        }
+    </style>
+</head>
+<body class="py-8">
+    <!-- 图片模态框 -->
+    <div id="imageModal" class="modal">
+        <span class="close-btn">&times;</span>
+        <img class="modal-content" id="modalImage">
+    </div>
+
+    <div class="container mx-auto px-4 max-w-6xl">
+        <!-- 标题 -->
+        <div class="text-center mb-10">
+            <h1 class="text-3xl md:text-4xl font-bold text-gray-800 mb-2">总站工会第三届书法美术摄影大赛</h1>
+            <p class="text-gray-600">请选择您喜欢的图片内容进行投票（每类最多1张，总计最多3张）</p>
+        </div>
+        
+        <!-- 登录区域 -->
+        <div id="loginSection" class="glassmorphism p-6 mb-8">
+            <h2 class="text-xl font-semibold text-gray-800 mb-4 flex items-center">
+                <i class="fas fa-sign-in-alt text-indigo-500 mr-2"></i>登录投票
+            </h2>
+            <div class="mb-4">
+                <label for="userId" class="block text-gray-700 mb-2">请输入登录编号</label>
+                <input type="text" id="userId" placeholder="请输入您的唯一编号" 
+                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition">
+            </div>
+            <button id="loginBtn" class="w-full bg-indigo-600 text-white py-2 px-4 rounded-lg hover:bg-indigo-700 transition flex items-center justify-center">
+                <i class="fas fa-arrow-right mr-2"></i>进入投票
+            </button>
+            <div id="loginError" class="mt-3 text-red-500 hidden"></div>
+            
+            <!-- 新增管理员密码输入框 -->
+            <div id="adminPasswordContainer" class="mt-4 hidden">
+                <label for="adminPassword" class="block text-gray-700 mb-2">请输入管理员密码</label>
+                <input type="password" id="adminPassword" placeholder="请输入密码" 
+                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition">
+                <button id="adminLoginBtn" class="w-full bg-indigo-600 text-white py-2 px-4 rounded-lg hover:bg-indigo-700 transition flex items-center justify-center mt-2">
+                    <i class="fas fa-sign-in-alt mr-2"></i>管理员登录
+                </button>
+                <div id="adminLoginError" class="mt-3 text-red-500 hidden"></div>
+            </div>
+        </div>
+        
+        <!-- 投票区域 -->
+        <div id="voteSection" class="glassmorphism p-6 mb-8 hidden">
+            <h2 class="text-xl font-semibold text-gray-800 mb-4 flex items-center">
+                <i class="fas fa-images text-indigo-500 mr-2"></i>请选择您喜欢的图片
+            </h2>
+            <p class="text-gray-600 mb-4">最多可选择3张图片</p>
+             <!-- 风光类 -->
+                <div class="category-column">
+                    <div class="category-title">
+                        <i class="fas fa-paw mr-2"></i>风光类
+                    </div>
+				</div>
+            <div class="image-grid">
+                <!-- 风光类图片1-19 -->
+                <div class="card-hover bg-white rounded-lg overflow-hidden shadow">
+                    <div class="image-container w-full h-48 overflow-hidden" onclick="showModal('a/a (1).jpg')">
+                        <img src="a/a (1).jpg" 
+                             alt="风光图片1" class="w-full h-full object-cover" onerror="this.onerror=null;this.src='https://via.placeholder.com/200x200?text=图片丢失';">
+                    </div>
+                    <div class="p-3">
+                        <input type="checkbox" id="img1" class="checkbox-custom" value="img1">
+                        <label for="img1" class="text-gray-700">风光图片1</label>
+                    </div>
+                </div>
+                
+                <!-- 风光类图片2-19 -->
+                <div class="card-hover bg-white rounded-lg overflow-hidden shadow">
+                    <div class="image-container w-full h-48 overflow-hidden" onclick="showModal('a/a (2).jpg')">
+                        <img src="a/a (2).jpg" 
+                             alt="风光图片2" class="w-full h-full object-cover" onerror="this.onerror=null;this.src='https://via.placeholder.com/200x200?text=图片丢失';">
+                    </div>
+                    <div class="p-3">
+                        <input type="checkbox" id="img2" class="checkbox-custom" value="img2">
+                        <label for="img2" class="text-gray-700">风光图片2</label>
+                    </div>
+                </div>
+                
+                <!-- 风光类图片3-19 -->
+                <div class="card-hover bg-white rounded-lg overflow-hidden shadow">
+                    <div class="image-container w-full h-48 overflow-hidden" onclick="showModal('a/a (3).jpg')">
+                        <img src="a/a (3).jpg" 
+                             alt="风光图片3" class="w-full h-full object-cover" onerror="this.onerror=null;this.src='https://via.placeholder.com/200x200?text=图片丢失';">
+                    </div>
+                    <div class="p-3">
+                        <input type="checkbox" id="img3" class="checkbox-custom" value="img3">
+                        <label for="img3" class="text-gray-700">风光图片3</label>
+                    </div>
+                </div>
+                
+                <!-- 风光类图片4-19 -->
+                <div class="card-hover bg-white rounded-lg overflow-hidden shadow">
+                    <div class="image-container w-full h-48 overflow-hidden" onclick="showModal('a/a (4).jpg')">
+                        <img src="a/a (4).jpg" 
+                             alt="风光图片4" class="w-full h-full object-cover" onerror="this.onerror=null;this.src='https://via.placeholder.com/200x200?text=图片丢失';">
+                    </div>
+                    <div class="p-3">
+                        <input type="checkbox" id="img4" class="checkbox-custom" value="img4">
+                        <label for="img4" class="text-gray-700">风光图片4</label>
+                    </div>
+                </div>
+                
+                <!-- 风光类图片5-19 -->
+                <div class="card-hover bg-white rounded-lg overflow-hidden shadow">
+                    <div class="image-container w-full h-48 overflow-hidden" onclick="showModal('a/a (5).jpg')">
+                        <img src="a/a (5).jpg" 
+                             alt="风光图片5" class="w-full h-full object-cover" onerror="this.onerror=null;this.src='https://via.placeholder.com/200x200?text=图片丢失';">
+                    </div>
+                    <div class="p-3">
+                        <input type="checkbox" id="img5" class="checkbox-custom" value="img5">
+                        <label for="img5" class="text-gray-700">风光图片5</label>
+                    </div>
+                </div>
+                
+                <!-- 风光类图片6-19 -->
+                <div class="card-hover bg-white rounded-lg overflow-hidden shadow">
+                    <div class="image-container w-full h-48 overflow-hidden" onclick="showModal('a/a (6).jpg')">
+                        <img src="a/a (6).jpg" 
+                             alt="风光图片6" class="w-full h-full object-cover" onerror="this.onerror=null;this.src='https://via.placeholder.com/200x200?text=图片丢失';">
+                    </div>
+                    <div class="p-3">
+                        <input type="checkbox" id="img6" class="checkbox-custom" value="img6">
+                        <label for="img6" class="text-gray-700">风光图片6</label>
+                    </div>
+                </div>
+                
+                <!-- 风光类图片7-19 -->
+                <div class="card-hover bg-white rounded-lg overflow-hidden shadow">
+                    <div class="image-container w-full h-48 overflow-hidden" onclick="showModal('a/a (7).jpg')">
+                        <img src="a/a (7).jpg" 
+                             alt="风光图片7" class="w-full h-full object-cover" onerror="this.onerror=null;this.src='https://via.placeholder.com/200x200?text=图片丢失';">
+                    </div>
+                    <div class="p-3">
+                        <input type="checkbox" id="img7" class="checkbox-custom" value="img7">
+                        <label for="img7" class="text-gray-700">风光图片7</label>
+                    </div>
+                </div>
+                
+                <!-- 风光类图片8-19 -->
+                <div class="card-hover bg-white rounded-lg overflow-hidden shadow">
+                    <div class="image-container w-full h-48 overflow-hidden" onclick="showModal('a/a (8).jpg')">
+                        <img src="a/a (8).jpg" 
+                             alt="风光图片8" class="w-full h-full object-cover" onerror="this.onerror=null;this.src='https://via.placeholder.com/200x200?text=图片丢失';">
+                    </div>
+                    <div class="p-3">
+                        <input type="checkbox" id="img8" class="checkbox-custom" value="img8">
+                        <label for="img8" class="text-gray-700">风光图片8</label>
+                    </div>
+                </div>
+                
+                <!-- 风光类图片9-19 -->
+                <div class="card-hover bg-white rounded-lg overflow-hidden shadow">
+                    <div class="image-container w-full h-48 overflow-hidden" onclick="showModal('a/a (9).jpg')">
+                        <img src="a/a (9).jpg" 
+                             alt="风光图片9" class="w-full h-full object-cover" onerror="this.onerror=null;this.src='https://via.placeholder.com/200x200?text=图片丢失';">
+                    </div>
+                    <div class="p-3">
+                        <input type="checkbox" id="img9" class="checkbox-custom" value="img9">
+                        <label for="img9" class="text-gray-700">风光图片9</label>
+                    </div>
+                </div>
+                
+                <!-- 风光类图片10-19 -->
+                <div class="card-hover bg-white rounded-lg overflow-hidden shadow">
+                    <div class="image-container w-full h-48 overflow-hidden" onclick="showModal('a/a (10).jpg')">
+                        <img src="a/a (10).jpg" 
+                             alt="风光图片10" class="w-full h-full object-cover" onerror="this.onerror=null;this.src='https://via.placeholder.com/200x200?text=图片丢失';">
+                    </div>
+                    <div class="p-3">
+                        <input type="checkbox" id="img10" class="checkbox-custom" value="img10">
+                        <label for="img10" class="text-gray-700">风光图片10</label>
+                    </div>
+                </div>
+                
+                <!-- 风光类图片11-19 -->
+                <div class="card-hover bg-white rounded-lg overflow-hidden shadow">
+                    <div class="image-container w-full h-48 overflow-hidden" onclick="showModal('a/a (11).jpg')">
+                        <img src="a/a (11).jpg" 
+                             alt="风光图片11" class="w-full h-full object-cover" onerror="this.onerror=null;this.src='https://via.placeholder.com/200x200?text=图片丢失';">
+                    </div>
+                    <div class="p-3">
+                        <input type="checkbox" id="img11" class="checkbox-custom" value="img11">
+                        <label for="img11" class="text-gray-700">风光图片11</label>
+                    </div>
+                </div>
+                
+                <!-- 风光类图片12-19 -->
+                <div class="card-hover bg-white rounded-lg overflow-hidden shadow">
+                    <div class="image-container w-full h-48 overflow-hidden" onclick="showModal('a/a (12).jpg')">
+                        <img src="a/a (12).jpg" 
+                             alt="风光图片12" class="w-full h-full object-cover" onerror="this.onerror=null;this.src='https://via.placeholder.com/200x200?text=图片丢失';">
+                    </div>
+                    <div class="p-3">
+                        <input type="checkbox" id="img12" class="checkbox-custom" value="img12">
+                        <label for="img12" class="text-gray-700">风光图片12</label>
+                    </div>
+                </div>
+                
+                <!-- 风光类图片13-19 -->
+                <div class="card-hover bg-white rounded-lg overflow-hidden shadow">
+                    <div class="image-container w-full h-48 overflow-hidden" onclick="showModal('a/a (13).jpg')">
+                        <img src="a/a (13).jpg" 
+                             alt="风光图片13" class="w-full h-full object-cover" onerror="this.onerror=null;this.src='https://via.placeholder.com/200x200?text=图片丢失';">
+                    </div>
+                    <div class="p-3">
+                        <input type="checkbox" id="img13" class="checkbox-custom" value="img13">
+                        <label for="img13" class="text-gray-700">风光图片13</label>
+                    </div>
+                </div>
+                
+                <!-- 风光类图片14-19 -->
+                <div class="card-hover bg-white rounded-lg overflow-hidden shadow">
+                    <div class="image-container w-full h-48 overflow-hidden" onclick="showModal('a/a (14).jpg')">
+                        <img src="a/a (14).jpg" 
+                             alt="风光图片14" class="w-full h-full object-cover" onerror="this.onerror=null;this.src='https://via.placeholder.com/200x200?text=图片丢失';">
+                    </div>
+                    <div class="p-3">
+                        <input type="checkbox" id="img14" class="checkbox-custom" value="img14">
+                        <label for="img14" class="text-gray-700">风光图片14</label>
+                    </div>
+                </div>
+                
+                <!-- 风光类图片15-19 -->
+                <div class="card-hover bg-white rounded-lg overflow-hidden shadow">
+                    <div class="image-container w-full h-48 overflow-hidden" onclick="showModal('a/a (15).jpg')">
+                        <img src="a/a (15).jpg" 
+                             alt="风光图片15" class="w-full h-full object-cover" onerror="this.onerror=null;this.src='https://via.placeholder.com/200x200?text=图片丢失';">
+                    </div>
+                    <div class="p-3">
+                        <input type="checkbox" id="img15" class="checkbox-custom" value="img15">
+                        <label for="img15" class="text-gray-700">风光图片15</label>
+                    </div>
+                </div>
+                
+                <!-- 风光类图片16-19 -->
+                <div class="card-hover bg-white rounded-lg overflow-hidden shadow">
+                    <div class="image-container w-full h-48 overflow-hidden" onclick="showModal('a/a (16).jpg')">
+                        <img src="a/a (16).jpg" 
+                             alt="风光图片16" class="w-full h-full object-cover" onerror="this.onerror=null;this.src='https://via.placeholder.com/200x200?text=图片丢失';">
+                    </div>
+                    <div class="p-3">
+                        <input type="checkbox" id="img16" class="checkbox-custom" value="img16">
+                        <label for="img16" class="text-gray-700">风光图片16</label>
+                    </div>
+                </div>
+                
+                <!-- 风光类图片17-19 -->
+                <div class="card-hover bg-white rounded-lg overflow-hidden shadow">
+                    <div class="image-container w-full h-48 overflow-hidden" onclick="showModal('a/a (17).jpg')">
+                        <img src="a/a (17).jpg" 
+                             alt="风光图片17" class="w-full h-full object-cover" onerror="this.onerror=null;this.src='https://via.placeholder.com/200x200?text=图片丢失';">
+                    </div>
+                    <div class="p-3">
+                        <input type="checkbox" id="img17" class="checkbox-custom" value="img17">
+                        <label for="img17" class="text-gray-700">风光图片17</label>
+                    </div>
+                </div>
+                
+                <!-- 风光类图片18-19 -->
+                <div class="card-hover bg-white rounded-lg overflow-hidden shadow">
+                    <div class="image-container w-full h-48 overflow-hidden" onclick="showModal('a/a (18).jpg')">
+                        <img src="a/a (18).jpg" 
+                             alt="风光图片18" class="w-full h-full object-cover" onerror="this.onerror=null;this.src='https://via.placeholder.com/200x200?text=图片丢失';">
+                    </div>
+                    <div class="p-3">
+                        <input type="checkbox" id="img18" class="checkbox-custom" value="img18">
+                        <label for="img18" class="text-gray-700">风光图片18</label>
+                    </div>
+                </div>
+                
+                <!-- 风光类图片19 -->
+                <div class="card-hover bg-white rounded-lg overflow-hidden shadow">
+                    <div class="image-container w-full h-48 overflow-hidden" onclick="showModal('a/a (19).jpg')">
+                        <img src="a/a (19).jpg" 
+                             alt="风光图片19" class="w-full h-full object-cover" onerror="this.onerror=null;this.src='https://via.placeholder.com/200x200?text=图片丢失';">
+                    </div>
+                    <div class="p-3">
+                        <input type="checkbox" id="img19" class="checkbox-custom" value="img19">
+                        <label for="img19" class="text-gray-700">风光图片19</label>
+                    </div>
+                </div>
+
+ </div>
+             <!-- 纪实类 -->
+                <div class="category-column">
+                    <div class="category-title">
+                        <i class="fas fa-paw mr-2"></i>纪实类
+                    </div>
+				<div class="image-grid">
+                	
+                <!-- 纪实类图片1 -->
+                <div class="card-hover bg-white rounded-lg overflow-hidden shadow">
+                    <div class="image-container w-full h-48 overflow-hidden" onclick="showModal('b/b (1).jpg')">
+                        <img src="b/b (1).jpg" 
+                             alt="纪实图片1" class="w-full h-full object-cover" onerror="this.onerror=null;this.src='https://via.placeholder.com/200x200?text=图片丢失';">
+                    </div>
+                    <div class="p-3">
+                        <input type="checkbox" id="img20" class="checkbox-custom" value="img20">
+                        <label for="img20" class="text-gray-700">纪实图片1</label>
+                    </div>
+				
+				</div>
+                <!-- 纪实类图片2 -->
+                <div class="card-hover bg-white rounded-lg overflow-hidden shadow">
+                    <div class="image-container w-full h-48 overflow-hidden" onclick="showModal('b/b (2).jpg')">
+                        <img src="b/b (2).jpg" 
+                             alt="纪实图片2" class="w-full h-full object-cover" onerror="this.onerror=null;this.src='https://via.placeholder.com/200x200?text=图片丢失';">
+                    </div>
+                    <div class="p-3">
+                        <input type="checkbox" id="img21" class="checkbox-custom" value="img21">
+                        <label for="img21" class="text-gray-700">纪实图片2</label>
+                    </div>
+				
+				</div>
+              
+                <!-- 纪实类图片3 -->
+                <div class="card-hover bg-white rounded-lg overflow-hidden shadow">
+                    <div class="image-container w-full h-48 overflow-hidden" onclick="showModal('b/b (3).jpg')">
+                        <img src="b/b (3).jpg" 
+                             alt="纪实图片3" class="w-full h-full object-cover" onerror="this.onerror=null;this.src='https://via.placeholder.com/200x200?text=图片丢失';">
+                    </div>
+                    <div class="p-3">
+                        <input type="checkbox" id="img22" class="checkbox-custom" value="img22">
+                        <label for="img22" class="text-gray-700">纪实图片3</label>
+                    </div>
+				
+				</div>
+                <!-- 纪实类图片4 -->
+                <div class="card-hover bg-white rounded-lg overflow-hidden shadow">
+                    <div class="image-container w-full h-48 overflow-hidden" onclick="showModal('b/b (4).jpg')">
+                        <img src="b/b (4).jpg" 
+                             alt="纪实图片4" class="w-full h-full object-cover" onerror="this.onerror=null;this.src='https://via.placeholder.com/200x200?text=图片丢失';">
+                    </div>
+                    <div class="p-3">
+                        <input type="checkbox" id="img23" class="checkbox-custom" value="img23">
+                        <label for="img23" class="text-gray-700">纪实图片4</label>
+                    </div>
+				
+				</div>
+                <!-- 纪实类图片5 -->
+                <div class="card-hover bg-white rounded-lg overflow-hidden shadow">
+                    <div class="image-container w-full h-48 overflow-hidden" onclick="showModal('b/b (5).jpg')">
+                        <img src="b/b (5).jpg" 
+                             alt="纪实图片5" class="w-full h-full object-cover" onerror="this.onerror=null;this.src='https://via.placeholder.com/200x200?text=图片丢失';">
+                    </div>
+                    <div class="p-3">
+                        <input type="checkbox" id="img24" class="checkbox-custom" value="img24">
+                        <label for="img24" class="text-gray-700">纪实图片5</label>
+                    </div>
+				
+				</div>
+                <!-- 纪实类图片6 -->
+                <div class="card-hover bg-white rounded-lg overflow-hidden shadow">
+                    <div class="image-container w-full h-48 overflow-hidden" onclick="showModal('b/b (6).jpg')">
+                        <img src="b/b (6).jpg" 
+                             alt="纪实图片6" class="w-full h-full object-cover" onerror="this.onerror=null;this.src='https://via.placeholder.com/200x200?text=图片丢失';">
+                    </div>
+                    <div class="p-3">
+                        <input type="checkbox" id="img25" class="checkbox-custom" value="img25">
+                        <label for="img25" class="text-gray-700">纪实图片6</label>
+                    </div>
+				
+				</div>
+                <!-- 纪实类图片7 -->
+                <div class="card-hover bg-white rounded-lg overflow-hidden shadow">
+                    <div class="image-container w-full h-48 overflow-hidden" onclick="showModal('b/b (7).jpg')">
+                        <img src="b/b (7).jpg" 
+                             alt="纪实图片7" class="w-full h-full object-cover" onerror="this.onerror=null;this.src='https://via.placeholder.com/200x200?text=图片丢失';">
+                    </div>
+                    <div class="p-3">
+                        <input type="checkbox" id="img26" class="checkbox-custom" value="img26">
+                        <label for="img26" class="text-gray-700">纪实图片7</label>
+                    </div>
+				
+				</div>
+              
+                <!-- 纪实类图片8 -->
+                <div class="card-hover bg-white rounded-lg overflow-hidden shadow">
+                    <div class="image-container w-full h-48 overflow-hidden" onclick="showModal('b/b (8).jpg')">
+                        <img src="b/b (8).jpg" 
+                             alt="纪实图片8" class="w-full h-full object-cover" onerror="this.onerror=null;this.src='https://via.placeholder.com/200x200?text=图片丢失';">
+                    </div>
+                    <div class="p-3">
+                        <input type="checkbox" id="img27" class="checkbox-custom" value="img27">
+                        <label for="img27" class="text-gray-700">纪实图片8</label>
+                    </div>
+				
+				</div>
+
+                <!-- 纪实类图片9 -->
+                <div class="card-hover bg-white rounded-lg overflow-hidden shadow">
+                    <div class="image-container w-full h-48 overflow-hidden" onclick="showModal('b/b (9).jpg')">
+                        <img src="b/b (9).jpg" 
+                             alt="纪实图片9" class="w-full h-full object-cover" onerror="this.onerror=null;this.src='https://via.placeholder.com/200x200?text=图片丢失';">
+                    </div>
+                    <div class="p-3">
+                        <input type="checkbox" id="img28" class="checkbox-custom" value="img28">
+                        <label for="img28" class="text-gray-700">纪实图片9</label>
+                    </div>
+				
+				</div>
+				                
+                <!-- 纪实类图片10 -->
+                <div class="card-hover bg-white rounded-lg overflow-hidden shadow">
+                    <div class="image-container w-full h-48 overflow-hidden" onclick="showModal('b/b (10).jpg')">
+                        <img src="b/b (10).jpg" 
+                             alt="纪实图片10" class="w-full h-full object-cover" onerror="handleImageError(this, '${img.description}')">
+                    </div>
+                    <div class="p-3">
+                        <input type="checkbox" id="img29" class="checkbox-custom" value="img29">
+                        <label for="img29" class="text-gray-700">纪实图片10</label>
+                    </div>
+				
+				</div>
+                                
+                <!-- 纪实类图片11 -->
+                <div class="card-hover bg-white rounded-lg overflow-hidden shadow">
+                    <div class="image-container w-full h-48 overflow-hidden" onclick="showModal('b/b (11).jpg')">
+                        <img src="b/b (11).jpg" 
+                             alt="纪实图片11" class="w-full h-full object-cover" onerror="this.onerror=null;this.src='https://via.placeholder.com/200x200?text=图片丢失';">
+                    </div>
+                    <div class="p-3">
+                        <input type="checkbox" id="img30" class="checkbox-custom" value="img30">
+                        <label for="img30" class="text-gray-700">纪实图片11</label>
+                    </div>
+				
+				</div>
+                                
+                <!-- 纪实类图片12 -->
+                <div class="card-hover bg-white rounded-lg overflow-hidden shadow">
+                    <div class="image-container w-full h-48 overflow-hidden" onclick="showModal('b/b (12).JPG')">
+                        <img src="b/b (12).jpg" 
+                             alt="纪实图片12" class="w-full h-full object-cover" onerror="handleImageError(this, '${img.description}')">
+                    </div>
+                    <div class="p-3">
+                        <input type="checkbox" id="img31" class="checkbox-custom" value="img31">
+                        <label for="img31" class="text-gray-700">纪实图片12</label>
+                    </div>
+				
+				</div>
+                                
+                <!-- 纪实类图片13 -->
+                <div class="card-hover bg-white rounded-lg overflow-hidden shadow">
+                    <div class="image-container w-full h-48 overflow-hidden" onclick="showModal('b/b (13).jpg')">
+                        <img src="b/b (13).jpg" 
+                             alt="纪实图片13" class="w-full h-full object-cover" onerror="this.onerror=null;this.src='https://via.placeholder.com/200x200?text=图片丢失';">
+                    </div>
+                    <div class="p-3">
+                        <input type="checkbox" id="img32" class="checkbox-custom" value="img32">
+                        <label for="img32" class="text-gray-700">纪实图片13</label>
+                    </div>
+				
+				</div>
+                                
+                <!-- 纪实类图片14 -->
+                <div class="card-hover bg-white rounded-lg overflow-hidden shadow">
+                    <div class="image-container w-full h-48 overflow-hidden" onclick="showModal('b/b (14).jpg')">
+                        <img src="b/b (14).jpg" 
+                             alt="纪实图片14" class="w-full h-full object-cover" onerror="this.onerror=null;this.src='https://via.placeholder.com/200x200?text=图片丢失';">
+                    </div>
+                    <div class="p-3">
+                        <input type="checkbox" id="img33" class="checkbox-custom" value="img33">
+                        <label for="img33" class="text-gray-700">纪实图片14</label>
+                    </div>
+				
+				</div>
+                                
+                <!-- 纪实类图片15 -->
+                <div class="card-hover bg-white rounded-lg overflow-hidden shadow">
+                    <div class="image-container w-full h-48 overflow-hidden" onclick="showModal('b/b (15).jpg')">
+                        <img src="b/b (15).jpg" 
+                             alt="纪实图片15" class="w-full h-full object-cover" onerror="this.onerror=null;this.src='https://via.placeholder.com/200x200?text=图片丢失';">
+                    </div>
+                    <div class="p-3">
+                        <input type="checkbox" id="img34" class="checkbox-custom" value="img34">
+                        <label for="img34" class="text-gray-700">纪实图片15</label>
+                    </div>
+				
+				</div>
+                                
+                <!-- 纪实类图片16 -->
+                <div class="card-hover bg-white rounded-lg overflow-hidden shadow">
+                    <div class="image-container w-full h-48 overflow-hidden" onclick="showModal('b/b (16).jpg')">
+                        <img src="b/b (16).jpg" 
+                             alt="纪实图片16" class="w-full h-full object-cover" onerror="handleImageError(this, '${img.description}')">
+                    </div>
+                    <div class="p-3">
+                        <input type="checkbox" id="img35" class="checkbox-custom" value="img35">
+                        <label for="img35" class="text-gray-700">纪实图片16</label>
+                    </div>
+				
+				</div>
+                                
+                <!-- 纪实类图片17 -->
+                <div class="card-hover bg-white rounded-lg overflow-hidden shadow">
+                    <div class="image-container w-full h-48 overflow-hidden" onclick="showModal('b/b (17).jpg')">
+                        <img src="b/b (17).jpg" 
+                             alt="纪实类图片17" class="w-full h-full object-cover" onerror="handleImageError(this, '${img.description}')">
+                    </div>
+                    <div class="p-3">
+                        <input type="checkbox" id="img36" class="checkbox-custom" value="img36">
+                        <label for="img36" class="text-gray-700">纪实图片17</label>
+                    </div>
+				
+				</div>
+                                
+                <!-- 纪实类图片18 -->
+                <div class="card-hover bg-white rounded-lg overflow-hidden shadow">
+                    <div class="image-container w-full h-48 overflow-hidden" onclick="showModal('b/b (18).jpg')">
+                        <img src="b/b (18).jpg" 
+                             alt="纪实图片18" class="w-full h-full object-cover" onerror="handleImageError(this, '${img.description}')">
+                    </div>
+                    <div class="p-3">
+                        <input type="checkbox" id="img37" class="checkbox-custom" value="img37">
+                        <label for="img37" class="text-gray-700">纪实图片18</label>
+                    </div>
+				
+				</div>
+                                
+                <!-- 纪实类图片19 -->
+                <div class="card-hover bg-white rounded-lg overflow-hidden shadow">
+                    <div class="image-container w-full h-48 overflow-hidden" onclick="showModal('b/b (19).jpg')">
+                        <img src="b/b (19).jpg" 
+                             alt="纪实图片19" class="w-full h-full object-cover" onerror="this.onerror=null;this.src='https://via.placeholder.com/200x200?text=图片丢失';">
+                    </div>
+                    <div class="p-3">
+                        <input type="checkbox" id="img38" class="checkbox-custom" value="img38">
+                        <label for="img38" class="text-gray-700">纪实图片19</label>
+                    </div>
+				
+				</div>
+                                
+                <!-- 纪实类图片20 -->
+                <div class="card-hover bg-white rounded-lg overflow-hidden shadow">
+                    <div class="image-container w-full h-48 overflow-hidden" onclick="showModal('b/b (20).jpg')">
+                        <img src="b/b (20).jpg" 
+                             alt="纪实图片20" class="w-full h-full object-cover" onerror="this.onerror=null;this.src='https://via.placeholder.com/200x200?text=图片丢失';">
+                    </div>
+                    <div class="p-3">
+                        <input type="checkbox" id="img39" class="checkbox-custom" value="img39">
+                        <label for="img39" class="text-gray-700">纪实图片20</label>
+                    </div>
+				
+				</div>
+                                
+                <!-- 纪实类图片21 -->
+                <div class="card-hover bg-white rounded-lg overflow-hidden shadow">
+                    <div class="image-container w-full h-48 overflow-hidden" onclick="showModal('b/b (21).jpg')">
+                        <img src="b/b (21).jpg" 
+                             alt="纪实图片21" class="w-full h-full object-cover" onerror="handleImageError(this, '${img.description}')">
+                    </div>
+                    <div class="p-3">
+                        <input type="checkbox" id="img40" class="checkbox-custom" value="img40">
+                        <label for="img40" class="text-gray-700">纪实图片21</label>
+                    </div>
+				
+				</div>
+                                
+                <!-- 纪实类图片22 -->
+                <div class="card-hover bg-white rounded-lg overflow-hidden shadow">
+                    <div class="image-container w-full h-48 overflow-hidden" onclick="showModal('b/b (22).jpg')">
+                        <img src="b/b (22).jpg" 
+                             alt="纪实图片22" class="w-full h-full object-cover" onerror="handleImageError(this, '${img.description}')">
+                    </div>
+                    <div class="p-3">
+                        <input type="checkbox" id="img41" class="checkbox-custom" value="img41">
+                        <label for="img41" class="text-gray-700">纪实图片22</label>
+                    </div>
+				
+				</div>
+                                
+                <!-- 纪实类图片23 -->
+                <div class="card-hover bg-white rounded-lg overflow-hidden shadow">
+                    <div class="image-container w-full h-48 overflow-hidden" onclick="showModal('b/b (23).jpg')">
+                        <img src="b/b (23).jpg" 
+                             alt="纪实图片23" class="w-full h-full object-cover" onerror="handleImageError(this, '${img.description}')">
+                    </div>
+                    <div class="p-3">
+                        <input type="checkbox" id="img42" class="checkbox-custom" value="img42">
+                        <label for="img42" class="text-gray-700">纪实图片23</label>
+                    </div>
+				
+				</div>
+                
+				</div>
+              
+                <!-- 新闻类 -->
+                <div class="category-column">
+                    <div class="category-title">
+                        <i class="fas fa-paw mr-2"></i>新闻类
+                    </div>
+				</div>
+            <div class="image-grid">
+                <!-- 新闻类图片1-19 -->
+                <div class="card-hover bg-white rounded-lg overflow-hidden shadow">
+                    <div class="image-container w-full h-48 overflow-hidden" onclick="showModal('c/c (1).jpg')">
+                        <img src="c/c (1).jpg" 
+                             alt="新闻图片1" class="w-full h-full object-cover" onerror="this.onerror=null;this.src='https://via.placeholder.com/200x200?text=图片丢失';">
+                    </div>
+                    <div class="p-3">
+                        <input type="checkbox" id="img43" class="checkbox-custom" value="img43">
+                        <label for="img43" class="text-gray-700">新闻图片1</label>
+                    </div>
+                </div>
+
+                <!-- 新闻类图片2-19 -->
+                <div class="card-hover bg-white rounded-lg overflow-hidden shadow">
+                    <div class="image-container w-full h-48 overflow-hidden" onclick="showModal('c/c (2).jpg')">
+                        <img src="c/c (2).jpg" 
+                             alt="新闻图片2" class="w-full h-full object-cover" onerror="this.onerror=null;this.src='https://via.placeholder.com/200x200?text=图片丢失';">
+                    </div>
+                    <div class="p-3">
+                        <input type="checkbox" id="img44" class="checkbox-custom" value="img44">
+                        <label for="img44" class="text-gray-700">新闻图片2</label>
+                    </div>
+                </div>
+
+                <!-- 新闻类图片3-19 -->
+                <div class="card-hover bg-white rounded-lg overflow-hidden shadow">
+                    <div class="image-container w-full h-48 overflow-hidden" onclick="showModal('c/c (3).jpg')">
+                        <img src="c/c (3).jpg" 
+                             alt="新闻图片3" class="w-full h-full object-cover" onerror="this.onerror=null;this.src='https://via.placeholder.com/200x200?text=图片丢失';">
+                    </div>
+                    <div class="p-3">
+                        <input type="checkbox" id="img45" class="checkbox-custom" value="img45">
+                        <label for="img45" class="text-gray-700">新闻图片3</label>
+                    </div>
+                </div>
+                
+                <!-- 新闻类图片4-19 -->
+                <div class="card-hover bg-white rounded-lg overflow-hidden shadow">
+                    <div class="image-container w-full h-48 overflow-hidden" onclick="showModal('c/c (4).jpg')">
+                        <img src="c/c (4).jpg" 
+                             alt="新闻图片4" class="w-full h-full object-cover" onerror="this.onerror=null;this.src='https://via.placeholder.com/200x200?text=图片丢失';">
+                    </div>
+                    <div class="p-3">
+                        <input type="checkbox" id="img46" class="checkbox-custom" value="img46">
+                        <label for="img46" class="text-gray-700">新闻图片4</label>
+                    </div>
+                </div>
+
+                
+                <!-- 新闻类图片5-19 -->
+                <div class="card-hover bg-white rounded-lg overflow-hidden shadow">
+                    <div class="image-container w-full h-48 overflow-hidden" onclick="showModal('c/c (5).jpg')">
+                        <img src="c/c (5).jpg" 
+                             alt="新闻图片5" class="w-full h-full object-cover" onerror="this.onerror=null;this.src='https://via.placeholder.com/200x200?text=图片丢失';">
+                    </div>
+                    <div class="p-3">
+                        <input type="checkbox" id="img47" class="checkbox-custom" value="img47">
+                        <label for="img47" class="text-gray-700">新闻图片5</label>
+                    </div>
+                </div>
+                
+                <!-- 新闻类图片6-19 -->
+                <div class="card-hover bg-white rounded-lg overflow-hidden shadow">
+                    <div class="image-container w-full h-48 overflow-hidden" onclick="showModal('c/c (6).jpg')">
+                        <img src="c/c (6).jpg" 
+                             alt="新闻图片6" class="w-full h-full object-cover" onerror="this.onerror=null;this.src='https://via.placeholder.com/200x200?text=图片丢失';">
+                    </div>
+                    <div class="p-3">
+                        <input type="checkbox" id="img48" class="checkbox-custom" value="img48">
+                        <label for="img48" class="text-gray-700">新闻图片6</label>
+                    </div>
+                </div>
+
+                
+                <!-- 新闻类图片7-19 -->
+                <div class="card-hover bg-white rounded-lg overflow-hidden shadow">
+                    <div class="image-container w-full h-48 overflow-hidden" onclick="showModal('c/c (7).jpg')">
+                        <img src="c/c (7).jpg" 
+                             alt="新闻图片7" class="w-full h-full object-cover" onerror="this.onerror=null;this.src='https://via.placeholder.com/200x200?text=图片丢失';">
+                    </div>
+                    <div class="p-3">
+                        <input type="checkbox" id="img49" class="checkbox-custom" value="img49">
+                        <label for="img49" class="text-gray-700">新闻图片7</label>
+                    </div>
+                </div>
+
+                
+                <!-- 新闻类图片8-19 -->
+                <div class="card-hover bg-white rounded-lg overflow-hidden shadow">
+                    <div class="image-container w-full h-48 overflow-hidden" onclick="showModal('c/c (8).jpg')">
+                        <img src="c/c (8).jpg" 
+                             alt="新闻图片8" class="w-full h-full object-cover" onerror="this.onerror=null;this.src='https://via.placeholder.com/200x200?text=图片丢失';">
+                    </div>
+                    <div class="p-3">
+                        <input type="checkbox" id="img50" class="checkbox-custom" value="img50">
+                        <label for="img50" class="text-gray-700">新闻图片8</label>
+                    </div>
+                </div>
+
+                
+                <!-- 新闻类图片9-19 -->
+                <div class="card-hover bg-white rounded-lg overflow-hidden shadow">
+                    <div class="image-container w-full h-48 overflow-hidden" onclick="showModal('c/c (9).jpg')">
+                        <img src="c/c (9).jpg" 
+                             alt="新闻图片9" class="w-full h-full object-cover" onerror="this.onerror=null;this.src='https://via.placeholder.com/200x200?text=图片丢失';">
+                    </div>
+                    <div class="p-3">
+                        <input type="checkbox" id="img51" class="checkbox-custom" value="img51">
+                        <label for="img51" class="text-gray-700">新闻图片9</label>
+                    </div>
+                </div>
+
+                
+                <!-- 新闻类图片10-19 -->
+                <div class="card-hover bg-white rounded-lg overflow-hidden shadow">
+                    <div class="image-container w-full h-48 overflow-hidden" onclick="showModal('c/c (10).jpg')">
+                        <img src="c/c (10).jpg" 
+                             alt="新闻图片10" class="w-full h-full object-cover" onerror="this.onerror=null;this.src='https://via.placeholder.com/200x200?text=图片丢失';">
+                    </div>
+                    <div class="p-3">
+                        <input type="checkbox" id="img52" class="checkbox-custom" value="img52">
+                        <label for="img52" class="text-gray-700">新闻图片10</label>
+                    </div>
+                </div>
+
+                
+                <!-- 新闻类图片11-19 -->
+                <div class="card-hover bg-white rounded-lg overflow-hidden shadow">
+                    <div class="image-container w-full h-48 overflow-hidden" onclick="showModal('c/c (11).jpg')">
+                        <img src="c/c (11).jpg" 
+                             alt="新闻图片11" class="w-full h-full object-cover" onerror="this.onerror=null;this.src='https://via.placeholder.com/200x200?text=图片丢失';">
+                    </div>
+                    <div class="p-3">
+                        <input type="checkbox" id="img53" class="checkbox-custom" value="img53">
+                        <label for="img53" class="text-gray-700">新闻图片12</label>
+                    </div>
+                </div>
+                
+                <!-- 新闻类图片12-19 -->
+                <div class="card-hover bg-white rounded-lg overflow-hidden shadow">
+                    <div class="image-container w-full h-48 overflow-hidden" onclick="showModal('c/c (12).jpg')">
+                        <img src="c/c (12).jpg" 
+                             alt="新闻图片12" class="w-full h-full object-cover" onerror="this.onerror=null;this.src='https://via.placeholder.com/200x200?text=图片丢失';">
+                    </div>
+                    <div class="p-3">
+                        <input type="checkbox" id="img54" class="checkbox-custom" value="img54">
+                        <label for="img54" class="text-gray-700">新闻图片12</label>
+                    </div>
+                </div>
+                 
+                <!-- 新闻类图片13-19 -->
+                <div class="card-hover bg-white rounded-lg overflow-hidden shadow">
+                    <div class="image-container w-full h-48 overflow-hidden" onclick="showModal('c/c (13).jpg')">
+                        <img src="c/c (13).jpg" 
+                             alt="新闻图片13" class="w-full h-full object-cover" onerror="this.onerror=null;this.src='https://via.placeholder.com/200x200?text=图片丢失';">
+                    </div>
+                    <div class="p-3">
+                        <input type="checkbox" id="img55" class="checkbox-custom" value="img55">
+                        <label for="img55" class="text-gray-700">新闻图片13</label>
+                    </div>
+                </div>
+                
+                <!-- 新闻类图片14-19 -->
+                <div class="card-hover bg-white rounded-lg overflow-hidden shadow">
+                    <div class="image-container w-full h-48 overflow-hidden" onclick="showModal('c/c (14).jpg')">
+                        <img src="c/c (14).jpg" 
+                             alt="新闻图片14" class="w-full h-full object-cover" onerror="this.onerror=null;this.src='https://via.placeholder.com/200x200?text=图片丢失';">
+                    </div>
+                    <div class="p-3">
+                        <input type="checkbox" id="img56" class="checkbox-custom" value="img56">
+                        <label for="img56" class="text-gray-700">新闻图片14</label>
+                    </div>
+                </div>
+
+                <!-- 新闻类图片15-19 -->
+                <div class="card-hover bg-white rounded-lg overflow-hidden shadow">
+                    <div class="image-container w-full h-48 overflow-hidden" onclick="showModal('c/c (15).jpg')">
+                        <img src="c/c (15).jpg" 
+                             alt="新闻图片15" class="w-full h-full object-cover" onerror="this.onerror=null;this.src='https://via.placeholder.com/200x200?text=图片丢失';">
+                    </div>
+                    <div class="p-3">
+                        <input type="checkbox" id="img57" class="checkbox-custom" value="img57">
+                        <label for="img57" class="text-gray-700">新闻图片15</label>
+                    </div>
+                </div>
+                <!-- 新闻类图片16-19 -->
+                <div class="card-hover bg-white rounded-lg overflow-hidden shadow">
+                    <div class="image-container w-full h-48 overflow-hidden" onclick="showModal('c/c (16).jpg')">
+                        <img src="c/c (16).jpg" 
+                             alt="新闻图片16" class="w-full h-full object-cover" onerror="this.onerror=null;this.src='https://via.placeholder.com/200x200?text=图片丢失';">
+                    </div>
+                    <div class="p-3">
+                        <input type="checkbox" id="img58" class="checkbox-custom" value="img58">
+                        <label for="img58" class="text-gray-700">新闻图片16</label>
+                    </div>
+                </div>
+
+                 <!-- 新闻类图片17-19 -->
+                <div class="card-hover bg-white rounded-lg overflow-hidden shadow">
+                    <div class="image-container w-full h-48 overflow-hidden" onclick="showModal('c/c (17).jpg')">
+                        <img src="c/c (17).jpg" 
+                             alt="新闻图片17" class="w-full h-full object-cover" onerror="this.onerror=null;this.src='https://via.placeholder.com/200x200?text=图片丢失';">
+                    </div>
+                    <div class="p-3">
+                        <input type="checkbox" id="img59" class="checkbox-custom" value="img59">
+                        <label for="img59" class="text-gray-700">新闻图片17</label>
+                    </div>
+                </div>
+
+                 <!-- 新闻类图片18-19 -->
+                <div class="card-hover bg-white rounded-lg overflow-hidden shadow">
+                    <div class="image-container w-full h-48 overflow-hidden" onclick="showModal('c/c (18).jpg')">
+                        <img src="c/c (18).jpg" 
+                             alt="新闻图片18" class="w-full h-full object-cover" onerror="this.onerror=null;this.src='https://via.placeholder.com/200x200?text=图片丢失';">
+                    </div>
+                    <div class="p-3">
+                        <input type="checkbox" id="img60" class="checkbox-custom" value="img60">
+                        <label for="img60" class="text-gray-700">新闻图片18</label>
+                    </div>
+                </div>
+
+                <!-- 新闻类图片19 -->
+                <div class="card-hover bg-white rounded-lg overflow-hidden shadow">
+                    <div class="image-container w-full h-48 overflow-hidden" onclick="showModal('c/c (19).jpg')">
+                        <img src="c/c (19).jpg" 
+                             alt="新闻图片19" class="w-full h-full object-cover" onerror="this.onerror=null;this.src='https://via.placeholder.com/200x200?text=图片丢失';">
+                    </div>
+                    <div class="p-3">
+                        <input type="checkbox" id="img61" class="checkbox-custom" value="img61">
+                        <label for="img61" class="text-gray-700">新闻图片19</label>
+                    </div>
+                </div>                      
+           
+			</div>
+	                            </div>
+            <div class="mt-6 flex justify-between items-center">
+                <p id="selectedCount" class="text-gray-600">已选择0/3张图片</p>
+                <button id="submitVoteBtn" class="bg-indigo-600 text-white py-2 px-6 rounded-lg hover:bg-indigo-700 transition disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                    <i class="fas fa-check-circle mr-2"></i>提交投票
+                </button>
+            </div>
+        </div>
+  </div>        
+        <!-- 结果提示区域 -->
+        <div id="resultSection" class="glassmorphism p-6 hidden">
+            <div class="text-center">
+                <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-check-circle text-green-500 text-3xl"></i>
+                </div>
+                <h2 class="text-xl font-semibold text-gray-800 mb-2">投票成功</h2>
+                <p class="text-gray-600 mb-4">感谢您的参与！</p>
+                <p id="votedImages" class="text-gray-700"></p>
+            </div>
+        </div>
+        
+        <!-- 管理员统计区域 -->
+        <div id="adminSection" class="glassmorphism p-6 hidden">
+            <!-- 新增返回按钮 -->
+            <div class="flex justify-between items-center mb-6">
+                <button id="backButton" class="text-indigo-600 hover:text-indigo-800 transition flex items-center">
+                    <i class="fas fa-arrow-left mr-2"></i>返回投票页面
+                </button>
+                <h2 class="text-xl font-semibold text-gray-800 flex items-center">
+                    <i class="fas fa-chart-bar text-indigo-500 mr-2"></i>投票统计
+                </h2>
+            </div>
+            
+            <!-- 统计导航 -->
+            <div class="flex border-b border-gray-200 mb-6">
+                <button class="tab-btn px-4 py-2 font-medium text-indigo-600 border-b-2 border-indigo-600" data-tab="summary">概览</button>
+                <button class="tab-btn px-4 py-2 font-medium text-gray-500 hover:text-indigo-600" data-tab="charts">图表</button>
+                <button class="tab-btn px-4 py-2 font-medium text-gray-500 hover:text-indigo-600" data-tab="time">时间分布</button>
+            </div>
+            
+            <!-- 统计内容 -->
+            <div id="summaryTab" class="tab-content active">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                    <div class="glassmorphism p-4">
+                        <h3 class="text-lg font-semibold text-gray-700 mb-2">总参与人数</h3>
+                        <p class="text-3xl font-bold text-indigo-600" id="totalParticipants">0</p>
+                    </div>
+                    <div class="glassmorphism p-4">
+                        <h3 class="text-lg font-semibold text-gray-700 mb-2">总投票数</h3>
+                        <p class="text-3xl font-bold text-indigo-600" id="totalVotes">0</p>
+                    </div>
+                </div>
+                
+                <div class="glassmorphism p-4 mb-6">
+                    <h3 class="text-lg font-semibold text-gray-700 mb-4">各图片得票情况</h3>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">图片</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">得票数</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">得票率</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200" id="voteStatsTable">
+                                <!-- 动态生成 -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="chartsTab" class="tab-content">
+                <div class="chart-container mb-6">
+                    <canvas id="voteChart"></canvas>
+                </div>
+            </div>
+            
+            <div id="timeTab" class="tab-content">
+                <div class="chart-container mb-6">
+                    <canvas id="timeChart"></canvas>
+                </div>
+            </div>
+            
+            <div class="flex justify-end">
+                <button id="exportBtn" class="bg-green-600 text-white py-2 px-6 rounded-lg hover:bg-green-700 transition">
+                    <i class="fas fa-file-export mr-2"></i>导出CSV
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 管理员入口链接 - 修改为"返回投票登录" -->
+    <a href="#" id="adminLink" class="admin-link glassmorphism p-2 rounded-lg hidden">返回投票登录</a>
+    
+    <!-- 页脚 -->
+    <footer class="mt-12 text-center text-gray-500 text-sm">
+        <p>created by <a href="https://space.coze.cn" class="text-indigo-500 hover:text-indigo-700">coze space</a></p>
+        <p class="mt-1">页面内容均由 AI 生成，仅供参考</p>
+    </footer>
+
+    <script>
+        // 图片模态框功能
+        function showModal(imageUrl) {
+            const modal = document.getElementById('imageModal');
+            const modalImg = document.getElementById('modalImage');
+            const closeBtn = document.querySelector('.close-btn');
+            
+            modalImg.src = imageUrl;
+            modal.classList.add('show');
+            
+            // 点击关闭按钮关闭模态框
+            closeBtn.onclick = function() {
+                modal.classList.remove('show');
+            }
+            
+            // 点击模态框背景关闭模态框
+            modal.onclick = function(event) {
+                if (event.target === modal) {
+                    modal.classList.remove('show');
+                }
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // 初始化图片数据
+            if (!localStorage.getItem('imagesData')) {
+                const imagesData = [];
+                // 风光类图片 (1-19)
+                for (let i = 1; i <= 19; i++) {
+                    imagesData.push({
+                        id: `img${i}`,
+                        url: `a/a (${i}).jpg`,
+                        description: `风光图片${i}`,
+                        category: '风光类'
+                    });
+                }
+                // 纪实类图片 (20-43)
+                for (let i = 20; i <= 43; i++) {
+                    imagesData.push({
+                        id: `img${i}`,
+                        url: `b/b (${i-20}).jpg`,
+                        description: `纪实图片${i-20}`,
+                        category: '纪实类'
+                    });
+                }
+                // 新闻类图片 (44-61)
+                for (let i = 44; i <= 61; i++) {
+                    imagesData.push({
+                        id: `img${i}`,
+                        url: `c/c (${i-44}).jpg`,
+                        description: `新闻图片${i-44}`,
+                        category: '新闻类'
+                    });
+                }
+                localStorage.setItem('imagesData', JSON.stringify(imagesData));
+            }
+            
+            // 初始化投票记录
+            if (!localStorage.getItem('votingRecords')) {
+                localStorage.setItem('votingRecords', JSON.stringify([]));
+            }
+            
+            // 管理员密码 (可修改)
+            const ADMIN_PASSWORD = 'admin123';
+            
+            // 用户投票部分
+            const loginSection = document.getElementById('loginSection');
+            const voteSection = document.getElementById('voteSection');
+            const resultSection = document.getElementById('resultSection');
+            const loginBtn = document.getElementById('loginBtn');
+            const userIdInput = document.getElementById('userId');
+            const loginError = document.getElementById('loginError');
+            const submitVoteBtn = document.getElementById('submitVoteBtn');
+            const selectedCount = document.getElementById('selectedCount');
+            const votedImages = document.getElementById('votedImages');
+            const adminPasswordContainer = document.getElementById('adminPasswordContainer');
+            const adminPassword = document.getElementById('adminPassword');
+            const adminLoginBtn = document.getElementById('adminLoginBtn');
+            const adminLoginError = document.getElementById('adminLoginError');
+            
+            const checkboxes = document.querySelectorAll('.checkbox-custom');
+            let selectedImages = [];
+            
+            // 管理员部分
+            const adminLink = document.getElementById('adminLink');
+            const adminSection = document.getElementById('adminSection');
+            const tabBtns = document.querySelectorAll('.tab-btn');
+            const tabContents = document.querySelectorAll('.tab-content');
+            const exportBtn = document.getElementById('exportBtn');
+            const backButton = document.getElementById('backButton');
+            
+            // 返回按钮点击事件
+            backButton.addEventListener('click', function() {
+                adminSection.classList.add('hidden');
+                loginSection.classList.remove('hidden');
+                adminLink.classList.add('hidden');
+            });
+            
+            // 登录按钮点击事件
+            loginBtn.addEventListener('click', function() {
+                const userId = userIdInput.value.trim();
+                
+                if (!userId) {
+                    loginError.textContent = '请输入登录编号';
+                    loginError.classList.remove('hidden');
+                    return;
+                }
+                
+                // 检查是否是管理员
+                if (userId === 'admin') {
+                    adminPasswordContainer.classList.remove('hidden');
+                    loginError.classList.add('hidden');
+                    return;
+                }
+                
+                // 检查是否已投票
+                const votingRecords = JSON.parse(localStorage.getItem('votingRecords') || '[]');
+                if (votingRecords.some(record => record.userId === userId)) {
+                    loginError.textContent = '您已参与过投票，无法重复参与';
+                    loginError.classList.remove('hidden');
+                    return;
+                }
+                
+                // 登录成功
+                loginError.classList.add('hidden');
+                loginSection.classList.add('hidden');
+                voteSection.classList.remove('hidden');
+            });
+            
+            // 管理员登录按钮点击事件
+            adminLoginBtn.addEventListener('click', function() {
+                const password = adminPassword.value.trim();
+                
+                if (password !== ADMIN_PASSWORD) {
+                    adminLoginError.textContent = '密码错误，请重试';
+                    adminLoginError.classList.remove('hidden');
+                    return;
+                }
+                
+                adminLoginError.classList.add('hidden');
+                loginSection.classList.add('hidden');
+                adminSection.classList.remove('hidden');
+                adminLink.classList.remove('hidden');
+                
+                // 加载统计数据
+                loadStatistics();
+            });
+            
+            // 管理员密码输入框回车事件
+            adminPassword.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    adminLoginBtn.click();
+                }
+            });
+            
+            // 管理员链接点击事件
+            adminLink.addEventListener('click', function(e) {
+                e.preventDefault();
+                adminSection.classList.add('hidden');
+                voteSection.classList.add('hidden');
+                resultSection.classList.add('hidden');
+                loginSection.classList.remove('hidden');
+                adminPasswordContainer.classList.add('hidden');
+                adminLink.classList.add('hidden');
+            });
+            
+            // 复选框变化事件
+            checkboxes.forEach(checkbox => {
+                checkbox.addEventListener('change', function() {
+                    if (this.checked) {
+                        // 检查是否已达到3票限制
+                        if (selectedImages.length >= 3) {
+                            this.checked = false;
+                            alert('最多只能选择3张图片！');
+                            return;
+                        }
+                        selectedImages.push(this.value);
+                    } else {
+                        selectedImages = selectedImages.filter(img => img !== this.value);
+                    }
+                    
+                    // 更新选择计数
+                    selectedCount.textContent = `已选择${selectedImages.length}/3张图片`;
+                    
+                    // 更新提交按钮状态
+                    submitVoteBtn.disabled = selectedImages.length === 0 || selectedImages.length > 3;
+                    
+                    // 如果已选3票，禁用其他未选复选框
+                    if (selectedImages.length >= 3) {
+                        checkboxes.forEach(cb => {
+                            if (!selectedImages.includes(cb.value)) {
+                                cb.disabled = true;
+                            }
+                        });
+                    } else {
+                        // 恢复所有复选框可选状态
+                        checkboxes.forEach(cb => {
+                            cb.disabled = false;
+                        });
+                    }
+                });
+            });
+            
+            // 提交投票按钮点击事件
+            submitVoteBtn.addEventListener('click', function() {
+                // 检查是否在同一分类中选择了多张图片
+                const categoryMap = {};
+                const imagesData = JSON.parse(localStorage.getItem('imagesData'));
+                
+                for (const imgId of selectedImages) {
+                    const img = imagesData.find(img => img.id === imgId);
+                    if (img) {
+                        const category = img.category;
+                        if (categoryMap[category]) {
+                            loginError.textContent = `您不能在"${category}"分类中选择多张图片`;
+                            loginError.classList.remove('hidden');
+                            return;
+                        }
+                        categoryMap[category] = true;
+                    }
+                }
+                
+                const userId = userIdInput.value.trim();
+                const timestamp = Date.now();
+                
+                // 保存投票记录
+                const votingRecords = JSON.parse(localStorage.getItem('votingRecords') || '[]');
+                votingRecords.push({
+                    userId: userId,
+                    timestamp: timestamp,
+                    selectedImages: selectedImages
+                });
+                localStorage.setItem('votingRecords', JSON.stringify(votingRecords));
+                
+                // 显示投票结果
+                voteSection.classList.add('hidden');
+                resultSection.classList.remove('hidden');
+                
+                // 显示投票的图片
+                const selectedLabels = selectedImages.map(imgId => {
+                    const img = imagesData.find(img => img.id === imgId);
+                    return img ? img.description : '';
+                });
+                votedImages.textContent = `您已投票给: ${selectedLabels.join('、')}`;
+                
+                // 重置选择状态
+                selectedImages = [];
+                selectedCount.textContent = `已选择0/3张图片`;
+                submitVoteBtn.disabled = true;
+                // 重置复选框状态并恢复可用
+                checkboxes.forEach(checkbox => {
+                    checkbox.checked = false;
+                    checkbox.disabled = false;
+                });
+            });
+            
+            // 回车键登录
+            userIdInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    loginBtn.click();
+                }
+            });
+            
+            // 标签切换
+            tabBtns.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const tabId = this.getAttribute('data-tab');
+                    
+                    // 更新标签按钮状态
+                    tabBtns.forEach(tab => {
+                        tab.classList.remove('text-indigo-600', 'border-indigo-600');
+                        tab.classList.add('text-gray-500');
+                    });
+                    this.classList.remove('text-gray-500');
+                    this.classList.add('text-indigo-600', 'border-indigo-600');
+                    
+                    // 更新标签内容
+                    tabContents.forEach(content => {
+                        content.classList.remove('active');
+                    });
+                    document.getElementById(tabId + 'Tab').classList.add('active');
+                    
+                    // 如果需要重新渲染图表
+                    if (tabId === 'charts') {
+                        renderVoteChart();
+                    } else if (tabId === 'time') {
+                        renderTimeChart();
+                    }
+                });
+            });
+            
+            // 导出按钮点击事件
+            exportBtn.addEventListener('click', function() {
+                exportToCSV();
+            });
+            
+            // 加载统计数据
+            function loadStatistics() {
+                const votingRecords = JSON.parse(localStorage.getItem('votingRecords') || '[]');
+                const imagesData = JSON.parse(localStorage.getItem('imagesData'));
+                
+                // 总参与人数
+                document.getElementById('totalParticipants').textContent = votingRecords.length;
+                
+                // 总投票数
+                const totalVotes = votingRecords.reduce((sum, record) => sum + record.selectedImages.length, 0);
+                document.getElementById('totalVotes').textContent = totalVotes;
+                
+                // 各图片得票情况
+                const voteStats = {};
+                imagesData.forEach(img => {
+                    voteStats[img.id] = {
+                        description: img.description,
+                        count: 0,
+                        percentage: 0
+                    };
+                });
+                
+                votingRecords.forEach(record => {
+                    record.selectedImages.forEach(imgId => {
+                        voteStats[imgId].count++;
+                    });
+                });
+                
+                // 计算得票率
+                Object.keys(voteStats).forEach(imgId => {
+                    // 确保分母不为零
+                    const percentage = totalVotes > 0 ? 
+                        (voteStats[imgId].count / totalVotes * 100) : 0;
+                    // 保留1位小数，并添加百分号
+                    voteStats[imgId].percentage = percentage.toFixed(1) + '%';
+                    // 同时保存原始数值用于图表
+                    voteStats[imgId].percentageValue = percentage;
+                });
+                
+                // 渲染表格
+                const tableBody = document.getElementById('voteStatsTable');
+                tableBody.innerHTML = '';
+                
+                // 按得票数降序排序
+                const sortedImages = imagesData.slice().sort((a, b) => {
+                    return voteStats[b.id].count - voteStats[a.id].count;
+                });
+                
+                sortedImages.forEach(img => {
+                    const stats = voteStats[img.id];
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="flex items-center">
+                                <div class="flex-shrink-0 h-10 w-10">
+                                    <img class="h-10 w-10 rounded-full" src="${img.url}" alt="${img.description}" onerror="handleImageError(this, '${img.description}')">
+                                </div>
+                                <div class="ml-4">
+                                    <div class="text-sm font-medium text-gray-900">${img.description}</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm text-gray-900">${stats.count}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm text-gray-900">${stats.percentage}</div>
+                        </td>
+                    `;
+                    tableBody.appendChild(row);
+                });
+                
+                // 渲染图表
+                renderVoteChart();
+                renderTimeChart();
+            }
+            
+            // 渲染得票图表
+            function renderVoteChart() {
+                const votingRecords = JSON.parse(localStorage.getItem('votingRecords') || '[]');
+                const imagesData = JSON.parse(localStorage.getItem('imagesData'));
+                
+                // 计算各图片得票数
+                const voteCounts = {};
+                imagesData.forEach(img => {
+                    voteCounts[img.description] = 0;
+                });
+                
+                votingRecords.forEach(record => {
+                    record.selectedImages.forEach(imgId => {
+                        const img = imagesData.find(img => img.id === imgId);
+                        if (img) {
+                            voteCounts[img.description]++;
+                        }
+                    });
+                });
+                
+                const ctx = document.getElementById('voteChart').getContext('2d');
+                
+                // 如果已有图表实例，先销毁
+                if (window.voteChart) {
+                    window.voteChart.destroy();
+                }
+                
+                window.voteChart = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: Object.keys(voteCounts),
+                        datasets: [{
+                            label: '得票数',
+                            data: Object.values(voteCounts),
+                            backgroundColor: 'rgba(79, 70, 229, 0.6)',
+                            borderColor: 'rgba(79, 70, 229, 1)',
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                grid: {
+                                    color: 'rgba(0, 0, 0, 0.05)'
+                                }
+                            },
+                            x: {
+                                grid: {
+                                    display: false
+                                }
+                            }
+                        },
+                        plugins: {
+                            legend: {
+                                display: false
+                            },
+                            title: {
+                                display: true,
+                                text: '各图片得票数统计'
+                            }
+                        }
+                    }
+                });
+            }
+            
+            // 渲染时间分布图表
+            function renderTimeChart() {
+                const votingRecords = JSON.parse(localStorage.getItem('votingRecords') || '[]');
+                
+                // 按小时统计投票数
+                const hours = Array(24).fill(0).map((_, i) => i);
+                const hourCounts = Array(24).fill(0);
+                
+                votingRecords.forEach(record => {
+                    const date = new Date(record.timestamp);
+                    const hour = date.getHours();
+                    hourCounts[hour]++;
+                });
+                
+                const ctx = document.getElementById('timeChart').getContext('2d');
+                
+                // 如果已有图表实例，先销毁
+                if (window.timeChart) {
+                    window.timeChart.destroy();
+                }
+                
+                window.timeChart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: hours.map(h => `${h}:00`),
+                        datasets: [{
+                            label: '投票数',
+                            data: hourCounts,
+                            backgroundColor: 'rgba(99, 102, 241, 0.2)',
+                            borderColor: 'rgba(99, 102, 241, 1)',
+                            borderWidth: 2,
+                            tension: 0.4,
+                            fill: true
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                grid: {
+                                    color: 'rgba(0, 0, 0, 0.05)'
+                                }
+                            },
+                            x: {
+                                grid: {
+                                    display: false
+                                }
+                            }
+                        },
+                        plugins: {
+                            legend: {
+                                display: false
+                            },
+                            title: {
+                                display: true,
+                                text: '投票时间分布（按小时）'
+                            }
+                        }
+                    }
+                });
+            }
+            
+            // 导出CSV
+            function exportToCSV() {
+                const votingRecords = JSON.parse(localStorage.getItem('votingRecords') || '[]');
+                const imagesData = JSON.parse(localStorage.getItem('imagesData'));
+                
+                // 计算各图片得票数
+                const voteCounts = {};
+                imagesData.forEach(img => {
+                    voteCounts[img.id] = {
+                        description: img.description,
+                        count: 0
+                    };
+                });
+                
+                votingRecords.forEach(record => {
+                    record.selectedImages.forEach(imgId => {
+                        voteCounts[imgId].count++;
+                    });
+                });
+                
+                // 构建CSV内容
+                let csvContent = "data:text/csv;charset=utf-8,";
+                
+                // 添加标题行
+                csvContent += "图片ID,图片描述,得票数\n";
+                
+                // 添加数据行
+                imagesData.forEach(img => {
+                    csvContent += `${img.id},"${img.description}",${voteCounts[img.id].count}\n`;
+                });
+                
+                // 添加汇总行
+                csvContent += `\n总参与人数,${votingRecords.length}\n`;
+                csvContent += `总投票数,${votingRecords.reduce((sum, record) => sum + record.selectedImages.length, 0)}\n`;
+                
+                // 创建下载链接
+                const encodedUri = encodeURI(csvContent);
+                const link = document.createElement("a");
+                link.setAttribute("href", encodedUri);
+                link.setAttribute("download", "投票统计数据.csv");
+                document.body.appendChild(link);
+                
+                // 触发下载
+                link.click();
+                
+                // 移除链接
+                document.body.removeChild(link);
+            }
+        });
+    </script>
+</body>
+</html>
